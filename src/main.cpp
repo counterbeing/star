@@ -7,16 +7,19 @@
 #include "DebugLog.h"
 #include "FastLED.h"
 #include "MilliTimer.h"
+#include <algorithm>
 
 MilliTimer timer{};
 
 CRGB leds[NUMPIXELS];
 
-const int legLength = NUMPIXELS / 5;
+const int numberOfLegs = 5;
+const int legLength = NUMPIXELS / numberOfLegs;
 const int sideLength = legLength / 2;
 const int numSides = 10;
 
 uint8_t hue = 0;
+
 void setup() {
   FastLED.addLeds<WS2811, DATAPIN, RGB>(leds, NUMPIXELS);
   Serial.begin(115200);
@@ -37,8 +40,15 @@ void displaySides() {
 
 CRGB side[sideLength] = {CRGB::Black};
 
-void eachSide(CRGB pixels[sideLength]) {
+void reverseSide(CRGB pixels[sideLength]) {
+  std::reverse(pixels, pixels + sideLength);
+}
+
+void eachSide(CRGB pixels[sideLength], bool reverse = false) {
   for (int i = 0; i < numSides; i++) {
+    if (reverse) {
+      reverseSide(pixels);
+    };
     for (int ii = 0; ii < sideLength; ii++) {
       int offset = (i * sideLength) + ii;
       leds[offset] = pixels[ii];
@@ -53,16 +63,20 @@ void setAll(CRGB pixels[], int length, CRGB color) {
 }
 
 int currentIndex = 0;
+int perimeterHue = 0;
 void perimeter() {
   currentIndex++;
   if (currentIndex >= sideLength) {
     currentIndex = 0;
   }
+  perimeterHue++;
+  if (perimeterHue > 255)
+    perimeterHue = 0;
   setAll(side, sideLength, CRGB::Black);
-  side[currentIndex] = CRGB::Yellow;
-  side[currentIndex + 1] = CRGB::LightYellow;
-  side[currentIndex + 2] = CRGB::Wheat;
-  eachSide(side);
+  side[currentIndex + 0] = CRGB::LightYellow;
+  side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
+  side[currentIndex + 2] = CRGB::LightYellow;
+  eachSide(side, true);
 }
 
 void crossfade() { fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255)); }
@@ -75,8 +89,17 @@ void gradient() {
   counter = counter + 1;
 }
 
+namespace RotateLegs {
+void setup() {
+  CRGB legs[NUMPIXELS];
+  for (int i = 0; i < numberOfLegs; i++) {}
+  // legLength
+};
+void run() {}
+} // namespace RotateLegs
+
 void loop() {
-  if (timer.hasElapsedWithReset(500)) {
+  if (timer.hasElapsedWithReset(120)) {
     perimeter();
     // crossfade();
     // gradient();

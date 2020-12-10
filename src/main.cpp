@@ -89,17 +89,108 @@ void gradient() {
   counter = counter + 1;
 }
 
-namespace RotateLegs {
+void randomSides() {
+  for (int i = 0; i < numSides; i++) {
+    int randomSeed = esp_random();
+    int rand = random8(randomSeed);
+    Serial.println(rand);
+    CHSV randomColor = CHSV(rand, 255, 255);
+    for (int ii = 0; ii < numSides; ii++) {
+      int offset = (i * sideLength) + ii;
+      leds[offset] = randomColor;
+    }
+  }
+}
+
+void randomLegs() {
+  for (int i = 0; i < numberOfLegs; i++) {
+    // int randomSeed = esp_random();
+    int rand = random8();
+    Serial.println(rand);
+    CHSV randomColor = CHSV(rand, 255, 255);
+    for (int ii = 0; ii < legLength; ii++) {
+      int offset = (i * legLength) + ii;
+      leds[offset] = randomColor;
+    }
+  }
+}
+
+void santaSides() {
+  for (int i = 0; i < numSides; i++) {
+    int randomSeed = esp_random();
+    int rand = random8(randomSeed);
+    Serial.println(rand);
+    CRGB randomColor = i % 2 == 0 ? CRGB::White : CRGB::Red;
+    for (int ii = 0; ii < numSides; ii++) {
+      int offset = (i * sideLength) + ii;
+      leds[offset] = randomColor;
+    }
+  }
+}
+
+namespace mut {
+void rotateLegs() {
+  CRGB newArray[NUMPIXELS];
+  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+  std::copy(newArray + 0, newArray + legLength, leds + (NUMPIXELS - legLength));
+  std::copy(newArray + legLength, newArray + NUMPIXELS, leds);
+}
+
+void shiftBySideLength() {
+  CRGB newArray[NUMPIXELS];
+  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+  std::copy(newArray + 0, newArray + sideLength,
+            leds + (NUMPIXELS - sideLength));
+  std::copy(newArray + sideLength, newArray + NUMPIXELS, leds);
+}
+
+void shiftByOne() {
+  CRGB newArray[NUMPIXELS];
+  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+  std::copy(newArray + 0, newArray + 1, leds + (NUMPIXELS - 1));
+  std::copy(newArray + 1, newArray + NUMPIXELS, leds);
+}
+} // namespace mut
+
+namespace RotateRandomLegs {
+bool setupComplete = false;
 void setup() {
-  CRGB legs[NUMPIXELS];
-  for (int i = 0; i < numberOfLegs; i++) {}
-  // legLength
+  randomLegs();
+  mut::shiftBySideLength();
+  setupComplete = true;
 };
-void run() {}
-} // namespace RotateLegs
+void run() {
+  if (!setupComplete) {
+    setup();
+  }
+  mut::rotateLegs();
+}
+} // namespace RotateRandomLegs
+
+namespace SantaSlide {
+bool setupComplete = false;
+int counter = 0;
+void setup() {
+  santaSides();
+  setupComplete = true;
+};
+void run() {
+  if (!setupComplete) {
+    setup();
+  }
+  if (counter % sideLength == 0) {
+    delay(500);
+  }
+  mut::shiftByOne();
+  counter++;
+}
+} // namespace SantaSlide
 
 void loop() {
-  if (timer.hasElapsedWithReset(120)) {
+
+  if (timer.hasElapsedWithReset(300)) {
+    // RotateRandomLegs::run();
+    // SantaSlide::run();
     perimeter();
     // crossfade();
     // gradient();

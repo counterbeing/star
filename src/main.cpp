@@ -62,23 +62,6 @@ void setAll(CRGB pixels[], int length, CRGB color) {
   }
 }
 
-int currentIndex = 0;
-int perimeterHue = 0;
-void perimeter() {
-  currentIndex++;
-  if (currentIndex >= sideLength) {
-    currentIndex = 0;
-  }
-  perimeterHue++;
-  if (perimeterHue > 255)
-    perimeterHue = 0;
-  setAll(side, sideLength, CRGB::Black);
-  side[currentIndex + 0] = CRGB::LightYellow;
-  side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
-  side[currentIndex + 2] = CRGB::LightYellow;
-  eachSide(side, true);
-}
-
 void crossfade() { fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255)); }
 
 int counter = 0;
@@ -93,7 +76,6 @@ void randomSides() {
   for (int i = 0; i < numSides; i++) {
     int randomSeed = esp_random();
     int rand = random8(randomSeed);
-    Serial.println(rand);
     CHSV randomColor = CHSV(rand, 255, 255);
     for (int ii = 0; ii < numSides; ii++) {
       int offset = (i * sideLength) + ii;
@@ -104,9 +86,7 @@ void randomSides() {
 
 void randomLegs() {
   for (int i = 0; i < numberOfLegs; i++) {
-    // int randomSeed = esp_random();
     int rand = random8();
-    Serial.println(rand);
     CHSV randomColor = CHSV(rand, 255, 255);
     for (int ii = 0; ii < legLength; ii++) {
       int offset = (i * legLength) + ii;
@@ -117,9 +97,6 @@ void randomLegs() {
 
 void santaSides() {
   for (int i = 0; i < numSides; i++) {
-    int randomSeed = esp_random();
-    int rand = random8(randomSeed);
-    Serial.println(rand);
     CRGB randomColor = i % 2 == 0 ? CRGB::White : CRGB::Red;
     for (int ii = 0; ii < numSides; ii++) {
       int offset = (i * sideLength) + ii;
@@ -129,71 +106,160 @@ void santaSides() {
 }
 
 namespace mut {
-void rotateLegs() {
-  CRGB newArray[NUMPIXELS];
-  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
-  std::copy(newArray + 0, newArray + legLength, leds + (NUMPIXELS - legLength));
-  std::copy(newArray + legLength, newArray + NUMPIXELS, leds);
-}
+  void rotateLegs() {
+    CRGB newArray[NUMPIXELS];
+    std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+    std::copy(newArray + 0, newArray + legLength,
+              leds + (NUMPIXELS - legLength));
+    std::copy(newArray + legLength, newArray + NUMPIXELS, leds);
+  }
 
-void shiftBySideLength() {
-  CRGB newArray[NUMPIXELS];
-  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
-  std::copy(newArray + 0, newArray + sideLength,
-            leds + (NUMPIXELS - sideLength));
-  std::copy(newArray + sideLength, newArray + NUMPIXELS, leds);
-}
+  void shiftBySideLength() {
+    CRGB newArray[NUMPIXELS];
+    std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+    std::copy(newArray + 0, newArray + sideLength,
+              leds + (NUMPIXELS - sideLength));
+    std::copy(newArray + sideLength, newArray + NUMPIXELS, leds);
+  }
 
-void shiftByOne() {
-  CRGB newArray[NUMPIXELS];
-  std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
-  std::copy(newArray + 0, newArray + 1, leds + (NUMPIXELS - 1));
-  std::copy(newArray + 1, newArray + NUMPIXELS, leds);
-}
+  void shiftByOne() {
+    CRGB newArray[NUMPIXELS];
+    std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
+    std::copy(newArray + 0, newArray + 1, leds + (NUMPIXELS - 1));
+    std::copy(newArray + 1, newArray + NUMPIXELS, leds);
+  }
 } // namespace mut
 
-namespace RotateRandomLegs {
-bool setupComplete = false;
-void setup() {
-  randomLegs();
-  mut::shiftBySideLength();
-  setupComplete = true;
-};
-void run() {
-  if (!setupComplete) {
-    setup();
-  }
-  mut::rotateLegs();
-}
-} // namespace RotateRandomLegs
+namespace Animations {
 
-namespace SantaSlide {
-bool setupComplete = false;
-int counter = 0;
-void setup() {
-  santaSides();
-  setupComplete = true;
+  namespace Perimeter {
+    int currentIndex = 0;
+    int perimeterHue = 0;
+    void run() {
+      currentIndex++;
+      if (currentIndex >= sideLength) {
+        currentIndex = 0;
+      }
+      perimeterHue++;
+      if (perimeterHue > 255)
+        perimeterHue = 0;
+      setAll(side, sideLength, CRGB::Black);
+      side[currentIndex + 0] = CRGB::LightYellow;
+      side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
+      side[currentIndex + 2] = CRGB::LightYellow;
+      eachSide(side, true);
+    }
+  } // namespace Perimeter
+
+  namespace RotateRandomLegs {
+    bool setupComplete = false;
+    void setup() {
+      Serial.println("Santa Setup");
+      randomLegs();
+      mut::shiftBySideLength();
+      setupComplete = true;
+    };
+    void run() {
+      if (timer.hasElapsedWithReset(100)) {
+        Serial.println("Rotate");
+        if (!setupComplete) {
+          setup();
+        }
+        mut::rotateLegs();
+        FastLED.show();
+      }
+    }
+  } // namespace RotateRandomLegs
+
+  namespace SantaSlide {
+    bool setupComplete = false;
+    int counter = 0;
+    void setup() {
+      Serial.println("Santa Setup");
+      santaSides();
+      setupComplete = true;
+    };
+
+    void run() {
+      if (timer.hasElapsedWithReset(100)) {
+        Serial.println("Santa");
+        if (!setupComplete) {
+          setup();
+        }
+        if (counter % sideLength == 0) {
+          delay(500);
+        }
+        mut::shiftByOne();
+        counter++;
+        FastLED.show();
+      }
+    }
+  } // namespace SantaSlide
+
+  namespace Stars {
+    int lastPosition = 0;
+    int numPixelsBetweenStars = 4;
+    void setup() { Serial.println("Stars Setup"); }
+    void run() {
+      if (timer.hasElapsedWithReset(100)) {
+        Serial.println("Stars");
+        lastPosition++;
+        if (lastPosition > numPixelsBetweenStars)
+          lastPosition = 0;
+
+        fill_solid(leds, NUMPIXELS, CRGB::Black);
+        for (int dot = lastPosition; dot < NUMPIXELS;
+             dot += numPixelsBetweenStars + 1) {
+          leds[dot] = CRGB::Coral;
+        }
+        FastLED.show();
+      }
+    }
+  } // namespace Stars
+
+} // namespace Animations
+
+typedef void (*Pattern)();
+typedef void (*Setup)();
+typedef Pattern PatternList[];
+typedef struct {
+  Pattern run;
+  Pattern setup;
+  uint16_t mTime;
+} PatternAndTime;
+typedef PatternAndTime PatternAndTimeList[];
+const PatternAndTimeList gPlaylist = {
+    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 2},
+    {Animations::Stars::run, Animations::Stars::setup, 2},
+    {Animations::RotateRandomLegs::run, Animations::RotateRandomLegs::setup, 2},
 };
-void run() {
-  if (!setupComplete) {
-    setup();
+
+uint8_t gCurrentTrackNumber = 0;
+bool gLoopPlaylist = true;
+
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
+
+void nextPattern() {
+  gCurrentTrackNumber = gCurrentTrackNumber + 1;
+
+  if (gCurrentTrackNumber == ARRAY_SIZE(gPlaylist)) {
+    Serial.println("################ LOOP PLAYLIST NOW");
+    gCurrentTrackNumber = 0;
   }
-  if (counter % sideLength == 0) {
-    delay(500);
-  }
-  mut::shiftByOne();
-  counter++;
+  gPlaylist[gCurrentTrackNumber].setup();
 }
-} // namespace SantaSlide
 
 void loop() {
+  using namespace Animations;
 
-  if (timer.hasElapsedWithReset(300)) {
-    // RotateRandomLegs::run();
-    // SantaSlide::run();
-    perimeter();
-    // crossfade();
-    // gradient();
-    FastLED.show();
+  // Serial.print("CURRENT TRACK: ");
+  // Serial.println(gCurrentTrackNumber);
+  gPlaylist[gCurrentTrackNumber].run();
+  {
+    EVERY_N_SECONDS_I(patternTimer, gPlaylist[gCurrentTrackNumber].mTime) {
+      nextPattern();
+
+      patternTimer.setPeriod(gPlaylist[gCurrentTrackNumber].mTime);
+    }
   }
 }

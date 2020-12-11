@@ -18,8 +18,6 @@ const int legLength = NUMPIXELS / numberOfLegs;
 const int sideLength = legLength / 2;
 const int numSides = 10;
 
-uint8_t hue = 0;
-
 void setup() {
   FastLED.addLeds<WS2811, DATAPIN, RGB>(leds, NUMPIXELS);
   Serial.begin(115200);
@@ -37,8 +35,6 @@ void displaySides() {
     }
   }
 }
-
-CRGB side[sideLength] = {CRGB::Black};
 
 void reverseSide(CRGB pixels[sideLength]) {
   std::reverse(pixels, pixels + sideLength);
@@ -125,7 +121,10 @@ namespace Animations {
   namespace Perimeter {
     int currentIndex;
     int perimeterHue;
+    CRGB side[sideLength];
+
     void setup() {
+      side[sideLength] = {CRGB::Black};
       currentIndex = 0;
       perimeterHue = 0;
     }
@@ -150,18 +149,12 @@ namespace Animations {
   } // namespace Perimeter
 
   namespace RotateRandomLegs {
-    bool setupComplete = false;
     void setup() {
       randomLegs();
       mut::shiftBySideLength();
-      setupComplete = true;
     };
     void run() {
       if (timer.hasElapsedWithReset(250)) {
-        Serial.println("Rotate");
-        if (!setupComplete) {
-          setup();
-        }
         mut::rotateLegs();
         FastLED.show();
       }
@@ -169,19 +162,14 @@ namespace Animations {
   } // namespace RotateRandomLegs
 
   namespace SantaSlide {
-    bool setupComplete = false;
-    int counter = 0;
+    int counter;
     void setup() {
       santaSides();
-      setupComplete = true;
+      counter = 0;
     };
 
     void run() {
       if (timer.hasElapsedWithReset(100)) {
-        Serial.println("Santa");
-        if (!setupComplete) {
-          setup();
-        }
         if (counter % sideLength == 0) {
           delay(500);
         }
@@ -196,15 +184,11 @@ namespace Animations {
     int lastPosition = 0;
     int numPixelsBetweenStars = 4;
     int delay;
-    void setup() {
-      Serial.println("Stars Setup");
-      delay = 200;
-    }
+    void setup() { delay = 200; }
     void run() {
       if (timer.hasElapsedWithReset(delay)) {
         if (delay > 0)
           delay = delay - 1;
-        Serial.println("Stars");
         lastPosition++;
         if (lastPosition > numPixelsBetweenStars)
           lastPosition = 0;
@@ -249,6 +233,31 @@ namespace Animations {
       }
     }
   } // namespace Gradient
+
+  namespace RainbowTunnel {
+    int hue;
+    CRGB side[sideLength];
+
+    void setup() {
+      side[sideLength] = {CRGB::Black};
+      hue = 0;
+    }
+
+    void run() {
+      if (timer.hasElapsedWithReset(1)) {
+        if (hue > 255)
+          hue = 0;
+        int hueStart = hue;
+        for (int i = 0; i < sideLength; i++) {
+          Serial.println(hueStart);
+          side[i] = CHSV(hueStart += 20, 255, 255);
+        }
+        eachSide(side, true);
+        FastLED.show();
+        hue++;
+      }
+    }
+  } // namespace RainbowTunnel
 } // namespace Animations
 
 typedef void (*Pattern)();
@@ -263,6 +272,7 @@ typedef PatternAndTime PatternAndTimeList[];
 
 // *****************      Playlist settings       **************** //
 const PatternAndTimeList gPlaylist = {
+    {Animations::RainbowTunnel::run, Animations::RainbowTunnel::setup, 30},
     {Animations::Gradient::run, Animations::Gradient::setup, 10},
     {Animations::SantaSlide::run, Animations::SantaSlide::setup, 10},
     {Animations::Crossfade::run, Animations::Crossfade::setup, 20},

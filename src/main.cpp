@@ -154,7 +154,6 @@ namespace Animations {
   namespace RotateRandomLegs {
     bool setupComplete = false;
     void setup() {
-      Serial.println("Santa Setup");
       randomLegs();
       mut::shiftBySideLength();
       setupComplete = true;
@@ -175,7 +174,6 @@ namespace Animations {
     bool setupComplete = false;
     int counter = 0;
     void setup() {
-      Serial.println("Santa Setup");
       santaSides();
       setupComplete = true;
     };
@@ -199,9 +197,15 @@ namespace Animations {
   namespace Stars {
     int lastPosition = 0;
     int numPixelsBetweenStars = 4;
-    void setup() { Serial.println("Stars Setup"); }
+    int delay;
+    void setup() {
+      Serial.println("Stars Setup");
+      delay = 240;
+    }
     void run() {
-      if (timer.hasElapsedWithReset(100)) {
+      if (timer.hasElapsedWithReset(delay)) {
+        if (delay > 0)
+          delay = delay - 1;
         Serial.println("Stars");
         lastPosition++;
         if (lastPosition > numPixelsBetweenStars)
@@ -229,8 +233,8 @@ typedef struct {
 } PatternAndTime;
 typedef PatternAndTime PatternAndTimeList[];
 const PatternAndTimeList gPlaylist = {
-    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 2},
-    {Animations::Stars::run, Animations::Stars::setup, 2},
+    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 1},
+    {Animations::Stars::run, Animations::Stars::setup, 20},
     {Animations::RotateRandomLegs::run, Animations::RotateRandomLegs::setup, 2},
 };
 
@@ -243,7 +247,6 @@ void nextPattern() {
   gCurrentTrackNumber = gCurrentTrackNumber + 1;
 
   if (gCurrentTrackNumber == ARRAY_SIZE(gPlaylist)) {
-    Serial.println("################ LOOP PLAYLIST NOW");
     gCurrentTrackNumber = 0;
   }
   gPlaylist[gCurrentTrackNumber].setup();
@@ -251,9 +254,6 @@ void nextPattern() {
 
 void loop() {
   using namespace Animations;
-
-  // Serial.print("CURRENT TRACK: ");
-  // Serial.println(gCurrentTrackNumber);
   gPlaylist[gCurrentTrackNumber].run();
   {
     EVERY_N_SECONDS_I(patternTimer, gPlaylist[gCurrentTrackNumber].mTime) {

@@ -62,16 +62,6 @@ void setAll(CRGB pixels[], int length, CRGB color) {
   }
 }
 
-void crossfade() { fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255)); }
-
-int counter = 0;
-void gradient() {
-  for (int i = 0; i < NUMPIXELS; i++) {
-    leds[i] = CHSV((i * 2.5) + counter, 255, 255);
-  }
-  counter = counter + 1;
-}
-
 void randomSides() {
   for (int i = 0; i < numSides; i++) {
     int randomSeed = esp_random();
@@ -133,21 +123,29 @@ namespace mut {
 namespace Animations {
 
   namespace Perimeter {
-    int currentIndex = 0;
-    int perimeterHue = 0;
+    int currentIndex;
+    int perimeterHue;
+    void setup() {
+      currentIndex = 0;
+      perimeterHue = 0;
+    }
+
     void run() {
-      currentIndex++;
-      if (currentIndex >= sideLength) {
-        currentIndex = 0;
+      if (timer.hasElapsedWithReset(100)) {
+        currentIndex++;
+        if (currentIndex >= sideLength) {
+          currentIndex = 0;
+        }
+        perimeterHue++;
+        if (perimeterHue > 255)
+          perimeterHue = 0;
+        setAll(side, sideLength, CRGB::Black);
+        side[currentIndex + 0] = CRGB::LightYellow;
+        side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
+        side[currentIndex + 2] = CRGB::LightYellow;
+        eachSide(side, true);
+        FastLED.show();
       }
-      perimeterHue++;
-      if (perimeterHue > 255)
-        perimeterHue = 0;
-      setAll(side, sideLength, CRGB::Black);
-      side[currentIndex + 0] = CRGB::LightYellow;
-      side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
-      side[currentIndex + 2] = CRGB::LightYellow;
-      eachSide(side, true);
     }
   } // namespace Perimeter
 
@@ -159,7 +157,7 @@ namespace Animations {
       setupComplete = true;
     };
     void run() {
-      if (timer.hasElapsedWithReset(100)) {
+      if (timer.hasElapsedWithReset(250)) {
         Serial.println("Rotate");
         if (!setupComplete) {
           setup();
@@ -200,7 +198,7 @@ namespace Animations {
     int delay;
     void setup() {
       Serial.println("Stars Setup");
-      delay = 240;
+      delay = 200;
     }
     void run() {
       if (timer.hasElapsedWithReset(delay)) {
@@ -221,6 +219,36 @@ namespace Animations {
     }
   } // namespace Stars
 
+  namespace Crossfade {
+    int hue;
+    int delay;
+    void setup() {
+      hue = 0;
+      delay = 150;
+    }
+    void run() {
+      if (timer.hasElapsedWithReset(delay)) {
+        if (delay > 0)
+          delay = delay - 1;
+        fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255));
+        FastLED.show();
+      }
+    }
+  } // namespace Crossfade
+
+  namespace Gradient {
+    int counter;
+    void setup() { counter = 0; }
+    void run() {
+      if (timer.hasElapsedWithReset(10)) {
+        for (int i = 0; i < NUMPIXELS; i++) {
+          leds[i] = CHSV((i * 2.5) + counter, 255, 255);
+        }
+        counter = counter + 1;
+        FastLED.show();
+      }
+    }
+  } // namespace Gradient
 } // namespace Animations
 
 typedef void (*Pattern)();
@@ -232,11 +260,18 @@ typedef struct {
   uint16_t mTime;
 } PatternAndTime;
 typedef PatternAndTime PatternAndTimeList[];
+
+// *****************      Playlist settings       **************** //
 const PatternAndTimeList gPlaylist = {
-    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 1},
+    {Animations::Gradient::run, Animations::Gradient::setup, 10},
+    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 10},
+    {Animations::Crossfade::run, Animations::Crossfade::setup, 20},
+    {Animations::Perimeter::run, Animations::Perimeter::setup, 20},
     {Animations::Stars::run, Animations::Stars::setup, 20},
-    {Animations::RotateRandomLegs::run, Animations::RotateRandomLegs::setup, 2},
+    {Animations::RotateRandomLegs::run, Animations::RotateRandomLegs::setup,
+     10},
 };
+// *****************      Playlist settings       **************** //
 
 uint8_t gCurrentTrackNumber = 0;
 bool gLoopPlaylist = true;

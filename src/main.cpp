@@ -18,11 +18,6 @@ const int legLength = NUMPIXELS / numberOfLegs;
 const int sideLength = legLength / 2;
 const int numSides = 10;
 
-void setup() {
-  FastLED.addLeds<WS2811, DATAPIN, RGB>(leds, NUMPIXELS);
-  Serial.begin(115200);
-}
-
 void displaySides() {
   for (int i = 0; i < numSides; i++) {
     for (int ii = 0; ii < sideLength; ii++) {
@@ -108,11 +103,25 @@ namespace mut {
     std::copy(newArray + sideLength, newArray + NUMPIXELS, leds);
   }
 
-  void shiftByOne() {
+  void shiftStrandByOne() {
     CRGB newArray[NUMPIXELS];
     std::copy(std::begin(leds), std::end(leds), std::begin(newArray));
     std::copy(newArray + 0, newArray + 1, leds + (NUMPIXELS - 1));
     std::copy(newArray + 1, newArray + NUMPIXELS, leds);
+  }
+
+  void shiftSideByOne(CRGB arr[], int arrLength) {
+    CRGB newArray[arrLength];
+    std::copy(arr, arr + arrLength, newArray);
+    std::copy(newArray + 0, newArray + 1, arr + (arrLength - 1));
+    std::copy(newArray + 1, newArray + arrLength, arr);
+  }
+
+  void shiftSideByOneBlackout(CRGB arr[], int arrLength) {
+    CRGB newArray[arrLength];
+    std::copy(arr, arr + arrLength, newArray);
+    std::copy(newArray + 1, newArray + arrLength, arr);
+    arr[sideLength - 1] = CRGB::Black;
   }
 } // namespace mut
 
@@ -173,7 +182,7 @@ namespace Animations {
         if (counter % sideLength == 0) {
           delay(500);
         }
-        mut::shiftByOne();
+        mut::shiftStrandByOne();
         counter++;
         FastLED.show();
       }
@@ -249,7 +258,6 @@ namespace Animations {
           hue = 0;
         int hueStart = hue;
         for (int i = 0; i < sideLength; i++) {
-          Serial.println(hueStart);
           side[i] = CHSV(hueStart += 20, 255, 255);
         }
         eachSide(side, true);
@@ -258,6 +266,37 @@ namespace Animations {
       }
     }
   } // namespace RainbowTunnel
+
+  namespace WarpSpeedSleigh {
+    int hue;
+    CRGB side[sideLength];
+    uint8_t counter = 0;
+    uint8_t gap;
+    // uint32_t colors[4];
+    uint32_t colors[] = {CRGB::White, CRGB::Red, CRGB::Green, CRGB::Yellow};
+
+    void setup() {
+      side[sideLength] = {CRGB::Black};
+      gap = random(5, 15);
+    }
+
+    void run() {
+      if (timer.hasElapsedWithReset(80)) {
+        if (counter >= gap) {
+          gap = random(3, sideLength);
+          uint8_t colorIndex = random(0, 3);
+          side[sideLength - 1] = colors[colorIndex];
+          counter = 0;
+        } else {
+          counter++;
+        }
+        mut::shiftSideByOneBlackout(side, sideLength);
+
+        eachSide(side, true);
+        FastLED.show();
+      }
+    }
+  } // namespace WarpSpeedSleigh
 } // namespace Animations
 
 typedef void (*Pattern)();
@@ -272,6 +311,7 @@ typedef PatternAndTime PatternAndTimeList[];
 
 // *****************      Playlist settings       **************** //
 const PatternAndTimeList gPlaylist = {
+    {Animations::WarpSpeedSleigh::run, Animations::WarpSpeedSleigh::setup, 100},
     {Animations::RainbowTunnel::run, Animations::RainbowTunnel::setup, 30},
     {Animations::Gradient::run, Animations::Gradient::setup, 10},
     {Animations::SantaSlide::run, Animations::SantaSlide::setup, 10},
@@ -287,6 +327,7 @@ uint8_t gCurrentTrackNumber = 0;
 bool gLoopPlaylist = true;
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
+void runSetupForAnimation() { gPlaylist[gCurrentTrackNumber].setup(); }
 
 void nextPattern() {
   gCurrentTrackNumber = gCurrentTrackNumber + 1;
@@ -294,7 +335,15 @@ void nextPattern() {
   if (gCurrentTrackNumber == ARRAY_SIZE(gPlaylist)) {
     gCurrentTrackNumber = 0;
   }
-  gPlaylist[gCurrentTrackNumber].setup();
+  runSetupForAnimation();
+}
+
+void setup() {
+  Serial.println("running setup");
+  FastLED.addLeds<WS2811, DATAPIN, RGB>(leds, NUMPIXELS);
+  Serial.begin(115200);
+  FastLED.clear();
+  runSetupForAnimation();
 }
 
 void loop() {

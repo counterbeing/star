@@ -35,7 +35,10 @@
       "titleBar.inactiveBackground": "#ff728c99",
       "titleBar.inactiveForeground": "#15202b99"
     },
-    "peacock.color": "#ff728c"
+    "peacock.color": "#ff728c",
+    "files.associations": {
+      "initializer_list": "cpp"
+    }
   },
   "extensions": {
     "recommendations": [

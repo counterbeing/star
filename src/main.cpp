@@ -157,7 +157,7 @@ namespace Animations {
     }
   } // namespace Perimeter
 
-  namespace RotateRandomLegs {
+  namespace StarFish {
     void setup() {
       randomLegs();
       mut::shiftBySideLength();
@@ -168,7 +168,7 @@ namespace Animations {
         FastLED.show();
       }
     }
-  } // namespace RotateRandomLegs
+  } // namespace StarFish
 
   namespace SantaSlide {
     int counter;
@@ -217,11 +217,14 @@ namespace Animations {
     int delay;
     void setup() {
       hue = 0;
-      delay = 150;
+      delay = 100;
     }
     void run() {
+
       if (timer.hasElapsedWithReset(delay)) {
-        if (delay > 0)
+        if (hue > 255)
+          hue = 0;
+        if (delay > 1)
           delay = delay - 1;
         fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255));
         FastLED.show();
@@ -229,7 +232,7 @@ namespace Animations {
     }
   } // namespace Crossfade
 
-  namespace Gradient {
+  namespace RotateGradient {
     int counter;
     void setup() { counter = 0; }
     void run() {
@@ -241,7 +244,7 @@ namespace Animations {
         FastLED.show();
       }
     }
-  } // namespace Gradient
+  } // namespace RotateGradient
 
   namespace RainbowTunnel {
     int hue;
@@ -312,13 +315,12 @@ typedef PatternAndTime PatternAndTimeList[];
 const PatternAndTimeList gPlaylist = {
     {Animations::RainbowTunnel::run, Animations::RainbowTunnel::setup, 30},
     {Animations::WarpSpeedSleigh::run, Animations::WarpSpeedSleigh::setup, 20},
-    {Animations::Gradient::run, Animations::Gradient::setup, 10},
-    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 10},
-    {Animations::Crossfade::run, Animations::Crossfade::setup, 20},
+    {Animations::RotateGradient::run, Animations::RotateGradient::setup, 15},
+    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 12},
+    {Animations::Crossfade::run, Animations::Crossfade::setup, 30},
     {Animations::Perimeter::run, Animations::Perimeter::setup, 20},
     {Animations::Stars::run, Animations::Stars::setup, 20},
-    {Animations::RotateRandomLegs::run, Animations::RotateRandomLegs::setup,
-     10},
+    {Animations::StarFish::run, Animations::StarFish::setup, 10},
 };
 // *****************      Playlist settings       **************** //
 

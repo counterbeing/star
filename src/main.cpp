@@ -258,6 +258,7 @@ namespace Animations {
           hue = 0;
         int hueStart = hue;
         for (int i = 0; i < sideLength; i++) {
+          Serial.println(hueStart);
           side[i] = CHSV(hueStart += 20, 255, 255);
         }
         eachSide(side, true);
@@ -309,8 +310,8 @@ typedef PatternAndTime PatternAndTimeList[];
 
 // *****************      Playlist settings       **************** //
 const PatternAndTimeList gPlaylist = {
-    {Animations::WarpSpeedSleigh::run, Animations::WarpSpeedSleigh::setup, 100},
     {Animations::RainbowTunnel::run, Animations::RainbowTunnel::setup, 30},
+    {Animations::WarpSpeedSleigh::run, Animations::WarpSpeedSleigh::setup, 20},
     {Animations::Gradient::run, Animations::Gradient::setup, 10},
     {Animations::SantaSlide::run, Animations::SantaSlide::setup, 10},
     {Animations::Crossfade::run, Animations::Crossfade::setup, 20},

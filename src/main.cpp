@@ -120,8 +120,8 @@ namespace mut {
   void shiftSideByOneBlackout(CRGB arr[], int arrLength) {
     CRGB newArray[arrLength];
     std::copy(arr, arr + arrLength, newArray);
-    std::copy(newArray + 1, newArray + arrLength, arr);
-    arr[sideLength - 1] = CRGB::Black;
+    std::copy(newArray, newArray + arrLength - 1, arr + 1);
+    arr[0] = CRGB::Black;
   }
 } // namespace mut
 
@@ -272,9 +272,7 @@ namespace Animations {
     CRGB side[sideLength];
     uint8_t counter = 0;
     uint8_t gap;
-    // uint32_t colors[4];
-    uint32_t colors[] = {CRGB::White, CRGB::Red, CRGB::Green, CRGB::Yellow};
-
+    uint32_t colors[] = {CRGB::White, CRGB::Red, CRGB::Green, CRGB::Gold};
     void setup() {
       side[sideLength] = {CRGB::Black};
       gap = random(5, 15);
@@ -284,8 +282,8 @@ namespace Animations {
       if (timer.hasElapsedWithReset(80)) {
         if (counter >= gap) {
           gap = random(3, sideLength);
-          uint8_t colorIndex = random(0, 3);
-          side[sideLength - 1] = colors[colorIndex];
+          uint8_t colorIndex = random(0, 4);
+          side[0] = colors[colorIndex];
           counter = 0;
         } else {
           counter++;

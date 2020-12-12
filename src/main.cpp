@@ -76,9 +76,9 @@ void randomLegs() {
   }
 }
 
-void santaSides() {
+void alternateSides(CRGB color1, CRGB color2) {
   for (int i = 0; i < numSides; i++) {
-    CRGB randomColor = i % 2 == 0 ? CRGB::White : CRGB::Red;
+    CRGB randomColor = i % 2 == 0 ? color1 : color2;
     for (int ii = 0; ii < numSides; ii++) {
       int offset = (i * sideLength) + ii;
       leds[offset] = randomColor;
@@ -175,9 +175,12 @@ namespace Animations {
   namespace SantaSlide {
     int counter;
     void setup() {
-      santaSides();
       counter = 0;
-      CRGB color = CRGB::Red;
+      CRGB color;
+      uint32_t colors[] = {CRGB::Red, CRGB::Green, CRGB::Gold};
+      uint8_t colorIndex = random(0, 3);
+      color = colors[colorIndex];
+      alternateSides(CRGB::White, color);
     };
 
     void run() {

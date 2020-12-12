@@ -128,8 +128,8 @@ namespace mut {
 namespace Animations {
 
   namespace Perimeter {
-    int currentIndex;
-    int perimeterHue;
+    uint8_t currentIndex;
+    uint16_t perimeterHue;
     CRGB side[sideLength];
 
     void setup() {
@@ -141,12 +141,14 @@ namespace Animations {
     void run() {
       if (timer.hasElapsedWithReset(100)) {
         currentIndex++;
-        if (currentIndex >= sideLength) {
+        if (currentIndex >= sideLength - 2)
           currentIndex = 0;
-        }
+
         perimeterHue++;
+
         if (perimeterHue > 255)
           perimeterHue = 0;
+
         setAll(side, sideLength, CRGB::Black);
         side[currentIndex + 0] = CRGB::LightYellow;
         side[currentIndex + 1] = CHSV(perimeterHue, 255, 255);
@@ -175,6 +177,7 @@ namespace Animations {
     void setup() {
       santaSides();
       counter = 0;
+      CRGB color = CRGB::Red;
     };
 
     void run() {
@@ -213,19 +216,23 @@ namespace Animations {
   } // namespace Stars
 
   namespace Crossfade {
-    int hue;
+    uint8_t hue;
     int delay;
     void setup() {
-      hue = 0;
+      hue = random(0, 255);
       delay = 100;
     }
     void run() {
 
       if (timer.hasElapsedWithReset(delay)) {
+        // Serial.print("HUE: ");
+        // Serial.println(hue);
+        // Serial.println(delay);
         if (hue > 255)
           hue = 0;
-        if (delay > 1)
+        if (delay > 20) {
           delay = delay - 1;
+        }
         fill_solid(leds, NUMPIXELS, CHSV(hue++, 255, 255));
         FastLED.show();
       }
@@ -247,12 +254,12 @@ namespace Animations {
   } // namespace RotateGradient
 
   namespace RainbowTunnel {
-    int hue;
+    uint8_t hue;
     CRGB side[sideLength];
 
     void setup() {
       side[sideLength] = {CRGB::Black};
-      hue = 0;
+      hue = random(0, 255);
     }
 
     void run() {
@@ -272,7 +279,6 @@ namespace Animations {
   } // namespace RainbowTunnel
 
   namespace WarpSpeedSleigh {
-    int hue;
     CRGB side[sideLength];
     uint8_t counter = 0;
     uint8_t gap;

@@ -195,14 +195,14 @@ namespace Animations {
     }
   } // namespace SantaSlide
 
-  namespace Stars {
+  namespace MeteorShower {
     int lastPosition = 0;
     int numPixelsBetweenStars = 4;
     int delay;
     void setup() { delay = 200; }
     void run() {
       if (timer.hasElapsedWithReset(delay)) {
-        if (delay > 0)
+        if (delay > 40)
           delay = delay - 1;
         lastPosition++;
         if (lastPosition > numPixelsBetweenStars)
@@ -216,7 +216,7 @@ namespace Animations {
         FastLED.show();
       }
     }
-  } // namespace Stars
+  } // namespace MeteorShower
 
   namespace Crossfade {
     uint8_t hue;
@@ -246,7 +246,7 @@ namespace Animations {
     int counter;
     void setup() { counter = 0; }
     void run() {
-      if (timer.hasElapsedWithReset(10)) {
+      if (timer.hasElapsedWithReset(30)) {
         for (int i = 0; i < NUMPIXELS; i++) {
           leds[i] = CHSV((i * 2.5) + counter, 255, 255);
         }
@@ -324,12 +324,12 @@ typedef PatternAndTime PatternAndTimeList[];
 const PatternAndTimeList gPlaylist = {
     {Animations::RainbowTunnel::run, Animations::RainbowTunnel::setup, 30},
     {Animations::WarpSpeedSleigh::run, Animations::WarpSpeedSleigh::setup, 20},
-    {Animations::RotateGradient::run, Animations::RotateGradient::setup, 15},
-    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 12},
-    {Animations::Crossfade::run, Animations::Crossfade::setup, 30},
+    {Animations::RotateGradient::run, Animations::RotateGradient::setup, 20},
+    {Animations::SantaSlide::run, Animations::SantaSlide::setup, 20},
+    {Animations::Crossfade::run, Animations::Crossfade::setup, 20},
     {Animations::Perimeter::run, Animations::Perimeter::setup, 20},
-    {Animations::Stars::run, Animations::Stars::setup, 20},
-    {Animations::StarFish::run, Animations::StarFish::setup, 10},
+    {Animations::StarFish::run, Animations::StarFish::setup, 20},
+    {Animations::MeteorShower::run, Animations::MeteorShower::setup, 20},
 };
 // *****************      Playlist settings       **************** //
 

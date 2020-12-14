@@ -16,7 +16,7 @@ CRGB leds[NUMPIXELS];
 const int numberOfLegs = 5;
 const int legLength = NUMPIXELS / numberOfLegs;
 const int sideLength = legLength / 2;
-const int numSides = 10;
+const int numSides = numberOfLegs * 2;
 
 void displaySides() {
   for (int i = 0; i < numSides; i++) {
@@ -79,7 +79,7 @@ void randomLegs() {
 void alternateSides(CRGB color1, CRGB color2) {
   for (int i = 0; i < numSides; i++) {
     CRGB randomColor = i % 2 == 0 ? color1 : color2;
-    for (int ii = 0; ii < numSides; ii++) {
+    for (int ii = 0; ii < sideLength; ii++) {
       int offset = (i * sideLength) + ii;
       leds[offset] = randomColor;
     }
